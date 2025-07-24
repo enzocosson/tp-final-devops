@@ -28,3 +28,19 @@ output "s3_bucket_arn" {
   description = "ARN du bucket S3"
   value       = aws_s3_bucket.react_app.arn
 }
+
+# Outputs pour DynamoDB
+output "dynamodb_table_name" {
+  description = "Nom de la table DynamoDB pour les todos"
+  value       = aws_dynamodb_table.todos.name
+}
+
+output "dynamodb_table_arn" {
+  description = "ARN de la table DynamoDB pour les todos"
+  value       = aws_dynamodb_table.todos.arn
+}
+
+output "dynamodb_role_arn" {
+  description = "ARN du rôle IAM pour l'accès à DynamoDB"
+  value       = aws_iam_role.dynamodb_role.arn
+}

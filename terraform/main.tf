@@ -170,3 +170,81 @@ resource "aws_s3_bucket_policy" "cloudfront_oac" {
 
   depends_on = [aws_s3_bucket_public_access_block.react_app]
 }
+
+# Table DynamoDB pour stocker les todos
+resource "aws_dynamodb_table" "todos" {
+  name           = "${var.project_name}-todos-${var.environment}"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  tags = {
+    Name        = "${var.project_name}-todos"
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+# Rôle IAM pour l'accès à DynamoDB (sera utilisé par l'API backend)
+resource "aws_iam_role" "dynamodb_role" {
+  name = "${var.project_name}-dynamodb-role-${var.environment}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = ["ecs-tasks.amazonaws.com", "lambda.amazonaws.com"]
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "${var.project_name}-dynamodb-role"
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+# Politique IAM pour l'accès à DynamoDB
+resource "aws_iam_policy" "dynamodb_policy" {
+  name        = "${var.project_name}-dynamodb-policy-${var.environment}"
+  description = "Policy for DynamoDB access"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Scan",
+          "dynamodb:Query"
+        ]
+        Resource = aws_dynamodb_table.todos.arn
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "${var.project_name}-dynamodb-policy"
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+# Attachement de la politique au rôle
+resource "aws_iam_role_policy_attachment" "dynamodb_policy_attachment" {
+  role       = aws_iam_role.dynamodb_role.name
+  policy_arn = aws_iam_policy.dynamodb_policy.arn
+}
