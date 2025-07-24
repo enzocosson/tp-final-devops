@@ -1,0 +1,14 @@
+# Exemple de fichier terraform.tfvars
+# Copiez ce fichier vers terraform.tfvars et personnalisez les valeurs
+
+# Région AWS où déployer l'infrastructure
+aws_region = "eu-west-1"
+
+# Nom de base du bucket S3 (un suffixe aléatoire sera ajouté automatiquement)
+bucket_name = "mon-app-react-unique"
+
+# Environnement de déploiement
+environment = "production"
+
+# Nom du projet
+project_name = "mon-app-react"
