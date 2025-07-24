@@ -42,6 +42,16 @@ jobs:
           cd frontend
           npm ci
 
+      - name: Run Backend Tests
+        run: |
+          cd backend
+          npm test
+
+      - name: Run Frontend Tests
+        run: |
+          cd frontend
+          npm run test:run
+
       - name: Lint Backend
         run: |
           cd backend
