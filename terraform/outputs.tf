@@ -44,3 +44,67 @@ output "dynamodb_role_arn" {
   description = "ARN du rôle IAM pour l'accès à DynamoDB"
   value       = aws_iam_role.dynamodb_role.arn
 }
+
+# Outputs pour ECR
+output "ecr_backend_repository_url" {
+  description = "URL du repository ECR pour le backend"
+  value       = aws_ecr_repository.backend.repository_url
+}
+
+output "ecr_frontend_repository_url" {
+  description = "URL du repository ECR pour le frontend"
+  value       = aws_ecr_repository.frontend.repository_url
+}
+
+output "ecr_backend_repository_name" {
+  description = "Nom du repository ECR pour le backend"
+  value       = aws_ecr_repository.backend.name
+}
+
+output "ecr_frontend_repository_name" {
+  description = "Nom du repository ECR pour le frontend"
+  value       = aws_ecr_repository.frontend.name
+}
+
+# Outputs pour l'Application Load Balancer
+output "alb_dns_name" {
+  description = "Nom DNS de l'Application Load Balancer"
+  value       = aws_lb.main.dns_name
+}
+
+output "alb_zone_id" {
+  description = "Zone ID de l'Application Load Balancer"
+  value       = aws_lb.main.zone_id
+}
+
+output "backend_api_url" {
+  description = "URL de l'API backend"
+  value       = "http://${aws_lb.main.dns_name}"
+}
+
+# Outputs pour ECS
+output "ecs_cluster_name" {
+  description = "Nom du cluster ECS"
+  value       = aws_ecs_cluster.main.name
+}
+
+output "ecs_service_name" {
+  description = "Nom du service ECS backend"
+  value       = aws_ecs_service.backend.name
+}
+
+# Outputs pour VPC
+output "vpc_id" {
+  description = "ID du VPC"
+  value       = aws_vpc.main.id
+}
+
+output "private_subnet_ids" {
+  description = "IDs des subnets privés"
+  value       = aws_subnet.private[*].id
+}
+
+output "public_subnet_ids" {
+  description = "IDs des subnets publics"
+  value       = aws_subnet.public[*].id
+}
