@@ -1,0 +1,9 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "3005:3005"
+    volumes:
+      - .:/app
+      - /app/node_modules # Ignorer le node_modules local pour éviter les conflits
+    command: node index.js
