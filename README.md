@@ -241,3 +241,7 @@ Pour toute question ou problème :
 1. Vérifiez les logs Terraform et AWS CLI
 2. Consultez la documentation AWS
 3. Vérifiez que toutes les variables sont correctement configurées
+
+### Schéma d'architecture cloud et de l'interaction utilisateur
+
+![Schéma](./schema.drawio)
