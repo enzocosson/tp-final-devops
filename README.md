@@ -244,4 +244,4 @@ Pour toute question ou problème :
 
 ### Schéma d'architecture cloud et de l'interaction utilisateur
 
-![Schéma](./schema.drawio)
+![Schéma](./schema.png)
