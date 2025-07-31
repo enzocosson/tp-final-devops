@@ -10,6 +10,10 @@ Ce projet contient une application React qui peut être déployée sur AWS en ut
 - **CloudFront** : CDN pour la distribution globale avec cache optimisé
 - **Terraform** : Infrastructure as Code pour provisionner les ressources AWS
 
+## Schéma d'architecture cloud et de l'interaction utilisateur
+
+![Schéma](./schema.png)
+
 ## Prérequis
 
 Avant de déployer l'application, assurez-vous d'avoir installé :
@@ -241,7 +245,3 @@ Pour toute question ou problème :
 1. Vérifiez les logs Terraform et AWS CLI
 2. Consultez la documentation AWS
 3. Vérifiez que toutes les variables sont correctement configurées
-
-### Schéma d'architecture cloud et de l'interaction utilisateur
-
-![Schéma](./schema.png)
