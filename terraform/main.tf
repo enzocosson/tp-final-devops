@@ -119,9 +119,9 @@ resource "aws_cloudfront_distribution" "react_app" {
       }
     }
 
-    min_ttl                = 31536000  # 1 an
-    default_ttl            = 31536000  # 1 an
-    max_ttl                = 31536000  # 1 an
+    min_ttl                = 31536000 # 1 an
+    default_ttl            = 31536000 # 1 an
+    max_ttl                = 31536000 # 1 an
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
   }
@@ -152,8 +152,8 @@ resource "aws_s3_bucket_policy" "cloudfront_oac" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "AllowCloudFrontServicePrincipal"
-        Effect    = "Allow"
+        Sid    = "AllowCloudFrontServicePrincipal"
+        Effect = "Allow"
         Principal = {
           Service = "cloudfront.amazonaws.com"
         }
@@ -173,9 +173,9 @@ resource "aws_s3_bucket_policy" "cloudfront_oac" {
 
 # Table DynamoDB pour stocker les todos
 resource "aws_dynamodb_table" "todos" {
-  name           = "${var.project_name}-todos-${var.environment}"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "id"
+  name         = "${var.project_name}-todos-${var.environment}"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
 
   attribute {
     name = "id"
@@ -579,8 +579,8 @@ resource "aws_lb_target_group" "backend" {
     path                = "/health"
     port                = "traffic-port"
     protocol            = "HTTP"
-    timeout             = 5
-    unhealthy_threshold = 2
+    timeout             = 10
+    unhealthy_threshold = 3
   }
 
   tags = {
@@ -692,16 +692,16 @@ resource "aws_ecs_task_definition" "backend" {
     {
       name  = "backend"
       image = "${aws_ecr_repository.backend.repository_url}:latest"
-      
+
       essential = true
-      
+
       portMappings = [
         {
           containerPort = 3005
           protocol      = "tcp"
         }
       ]
-      
+
       environment = [
         {
           name  = "PORT"
@@ -716,7 +716,7 @@ resource "aws_ecs_task_definition" "backend" {
           value = aws_dynamodb_table.todos.name
         }
       ]
-      
+
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -725,13 +725,13 @@ resource "aws_ecs_task_definition" "backend" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
-      
+
       healthCheck = {
-        command = ["CMD-SHELL", "curl -f http://localhost:3005/health || exit 1"]
-        interval = 30
-        timeout = 5
-        retries = 3
-        startPeriod = 60
+        command     = ["CMD-SHELL", "curl -f http://localhost:3005/health || exit 1"]
+        interval    = 30
+        timeout     = 10
+        retries     = 5
+        startPeriod = 120
       }
     }
   ])
