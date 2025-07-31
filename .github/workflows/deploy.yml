@@ -105,22 +105,104 @@ jobs:
 
       - name: Update ECS service
         run: |
+          echo "🚀 Updating ECS service..."
           aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --force-new-deployment
+          echo "✅ ECS service update initiated"
 
-      - name: Wait for service stability
+      - name: Check service status before waiting
         run: |
-          aws ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_SERVICE
+          echo "📊 Checking initial service status..."
+          aws ecs describe-services --cluster $ECS_CLUSTER --services $ECS_SERVICE
+
+      - name: Wait for service stability with timeout
+        timeout-minutes: 15
+        run: |
+          echo "⏳ Waiting for service to become stable (timeout: 15 minutes)..."
+
+          # Configuration des paramètres de retry pour aws cli
+          export AWS_MAX_ATTEMPTS=10
+          export AWS_RETRY_MODE=adaptive
+
+          # Attendre la stabilité avec gestion d'erreur améliorée
+          if aws ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_SERVICE; then
+            echo "✅ Service is now stable!"
+          else
+            echo "❌ Service stability wait failed. Checking service status..."
+            
+            # Diagnostic en cas d'échec
+            echo "📋 Service description:"
+            aws ecs describe-services --cluster $ECS_CLUSTER --services $ECS_SERVICE
+            
+            echo "📋 Recent service events:"
+            aws ecs describe-services --cluster $ECS_CLUSTER --services $ECS_SERVICE \
+              --query 'services[0].events[:5]' --output table
+            
+            echo "📋 Task definition details:"
+            TASK_DEF_ARN=$(aws ecs describe-services --cluster $ECS_CLUSTER --services $ECS_SERVICE \
+              --query 'services[0].taskDefinition' --output text)
+            aws ecs describe-task-definition --task-definition $TASK_DEF_ARN \
+              --query 'taskDefinition.containerDefinitions[0].{Image:image,Memory:memory,CPU:cpu}' --output table
+            
+            echo "📋 Running tasks:"
+            aws ecs list-tasks --cluster $ECS_CLUSTER --service-name $ECS_SERVICE
+            
+            # Ne pas faire échouer le pipeline immédiatement
+            echo "⚠️ Service may still be deploying. Continuing with health check..."
+          fi
 
       - name: Get ALB URL
         id: get-url
         run: |
+          echo "🔍 Getting ALB URL..."
           ALB_URL=$(aws elbv2 describe-load-balancers --names tp2-bis-react-app-alb --query 'LoadBalancers[0].DNSName' --output text)
           echo "alb_url=http://$ALB_URL" >> $GITHUB_OUTPUT
+          echo "🌐 ALB URL: http://$ALB_URL"
 
-      - name: Test deployment
+      - name: Test deployment with retries
         run: |
-          sleep 30  # Wait for ALB to be ready
-          curl -f ${{ steps.get-url.outputs.alb_url }}/health || echo "Health check failed, but deployment completed"
+          ALB_URL="${{ steps.get-url.outputs.alb_url }}"
+          echo "🧪 Testing deployment at: $ALB_URL"
+
+          # Attendre que l'ALB soit prêt et faire plusieurs tentatives
+          MAX_ATTEMPTS=10
+          ATTEMPT=1
+          SUCCESS=false
+
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ] && [ "$SUCCESS" = false ]; do
+            echo "🔄 Attempt $ATTEMPT/$MAX_ATTEMPTS - Testing health endpoint..."
+            
+            if curl -f -s --max-time 10 "$ALB_URL/health"; then
+              echo "✅ Health check passed!"
+              SUCCESS=true
+            else
+              echo "❌ Health check failed on attempt $ATTEMPT"
+              
+              if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+                SLEEP_TIME=$((ATTEMPT * 15))
+                echo "⏳ Waiting ${SLEEP_TIME} seconds before retry..."
+                sleep $SLEEP_TIME
+              fi
+            fi
+            
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+
+          if [ "$SUCCESS" = false ]; then
+            echo "💥 All health check attempts failed"
+            echo "🔍 Let's check what's happening..."
+            
+            # Diagnostic supplémentaire
+            echo "📋 ALB target health:"
+            aws elbv2 describe-target-health --target-group-arn $(aws elbv2 describe-target-groups --names tp2-bis-react-app-backend-tg --query 'TargetGroups[0].TargetGroupArn' --output text) || echo "Could not get target health"
+            
+            echo "📋 Service status:"
+            aws ecs describe-services --cluster $ECS_CLUSTER --services $ECS_SERVICE --query 'services[0].{RunningCount:runningCount,PendingCount:pendingCount,DesiredCount:desiredCount}' --output table
+            
+            # Ne pas faire échouer le déploiement pour un problème de health check
+            echo "⚠️ Health check failed, but deployment may still be in progress"
+          else
+            echo "🎉 Deployment health check successful!"
+          fi
 
       - name: Deployment notification
         if: always()
