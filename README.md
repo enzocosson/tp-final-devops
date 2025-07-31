@@ -1,6 +1,8 @@
-# Lien d'accès : https://d1g0nijwsvm4k.cloudfront.net
+## Lien d'accès : https://d1g0nijwsvm4k.cloudfront.net
 
-# Déploiement de l'application React avec AWS S3 et CloudFront
+( Le lien ne fonctionne plus, nous l'avons supprimé avec terraform destroy afin de ne pas se faire débiter par AWS )
+
+## Déploiement de l'application React avec AWS S3 et CloudFront
 
 Ce projet contient une application React qui peut être déployée sur AWS en utilisant S3 pour l'hébergement statique et CloudFront comme CDN.
 
@@ -12,7 +14,22 @@ Ce projet contient une application React qui peut être déployée sur AWS en ut
 
 ## Schéma d'architecture cloud et de l'interaction utilisateur
 
-![Schéma](./schema.png)
+![Schéma](./assets/schema.png)
+
+## Captures AWS
+
+### CloudFront
+
+![CloudFront](./assets/cloudfront.png)
+
+### DynamoDb
+
+![DynamoDb](./assets/dynamo.png)
+![DynamoDb2](./assets/dynamo2.png)
+
+### S3
+
+![AmazonS3](./assets/s3.png)
 
 ## Prérequis
 
